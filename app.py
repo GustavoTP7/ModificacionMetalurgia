@@ -62,12 +62,12 @@ def aplicar_feature_engineering(df):
 
         # Arcillas Totales
         arcilla_cols = [c for c in ['Cao_18', 'Mont_18', 'Filo_18', 'Arcillas_pct'] if c in cols]
-        if arcilla_cols and 'Arcillas_Totales_calc' not in cols and len(arcilla_cols) &gt; 1:
+        if arcilla_cols and 'Arcillas_Totales_calc' not in cols and len(arcilla_cols) > 1:
             df_feat['Arcillas_Totales_calc'] = df_feat[arcilla_cols].sum(axis=1)
 
         # Sulfuros Cu Totales
         sulf_cols = [c for c in ['CPY', 'CC', 'CV', 'BN', 'Chalcopyrite_pct', 'Min_Sec_pct'] if c in cols]
-        if sulf_cols and 'Sulfuros_Cu_calc' not in cols and len(sulf_cols) &gt; 1:
+        if sulf_cols and 'Sulfuros_Cu_calc' not in cols and len(sulf_cols) > 1:
             df_feat['Sulfuros_Cu_calc'] = df_feat[sulf_cols].sum(axis=1)
 
         # Razón Sulfuros / Pirita
@@ -191,7 +191,7 @@ if archivo is not None:
                 if modo_ruido == "Depuración por IQR":
                     Q1, Q3 = df.quantile(0.25), df.quantile(0.75)
                     IQR = Q3 - Q1
-                    mask = ~((df &lt; (Q1 - 1.5 * IQR)) | (df &gt; (Q3 + 1.5 * IQR))).any(axis=1)
+                    mask = ~((df < (Q1 - 1.5 * IQR)) | (df > (Q3 + 1.5 * IQR))).any(axis=1)
                 elif modo_ruido == "Isolation Forest (Multivariado)":
                     iso = IsolationForest(contamination=0.05, random_state=42)
                     mask = iso.fit_predict(df[features + [target]]) == 1
@@ -204,11 +204,11 @@ if archivo is not None:
                 status_text.text("Fase 2/5: Identificando UGM dinámicas...")
                 best_k, best_score = 2, -1
                 for k in range(2, 6):
-                    if len(df) &gt; k:
+                    if len(df) > k:
                         km = KMeans(n_clusters=k, random_state=42, n_init=10)
                         labels = km.fit_predict(df[features + [target]])
                         score = silhouette_score(df[features + [target]], labels)
-                        if score &gt; best_score: best_score, best_k = score, k
+                        if score > best_score: best_score, best_k = score, k
                 kmeans_final = KMeans(n_clusters=best_k, random_state=42, n_init=10)
                 df['Dominio_GMD'] = kmeans_final.fit_predict(df[features + [target]])
                 progress_bar.progress(40)
@@ -222,7 +222,7 @@ if archivo is not None:
                 if transformar_log:
                     status_text.text("Fase 3/5: Normalizando distribuciones sesgadas...")
                     for c in features:
-                        if df[c].min() &gt;= 0 and abs(df[c].skew()) &gt; 1.0:
+                        if df[c].min() >= 0 and abs(df[c].skew()) > 1.0:
                             X[c] = np.log1p(X[c])
 
                 if balancear:
@@ -239,7 +239,7 @@ if archivo is not None:
                     X = X_res[features]
 
                     n_sinteticos = len(X_res) - len(ids)
-                    if n_sinteticos &gt; 0:
+                    if n_sinteticos > 0:
                         id_f = np.concatenate([ids, [f"SMOTE_{i+1}" for i in range(n_sinteticos)]])
                 progress_bar.progress(60)
 
@@ -267,8 +267,8 @@ if archivo is not None:
                         y_dom = y[idx_dom]
 
                         y_pred_dom = np.zeros_like(y_dom)
-                        # Umbral adaptativo: Si N &gt;= 25 se entrena sub-modelo local; de lo contrario se usa el Modelo Global
-                        if len(y_dom) &gt;= 25:
+                        # Umbral adaptativo: Si N >= 25 se entrena sub-modelo local; de lo contrario se usa el Modelo Global
+                        if len(y_dom) >= 25:
                             n_splits_u = min(5, len(y_dom))
                             kf_u = KFold(n_splits=n_splits_u, shuffle=True, random_state=42)
                             for train_in, val_in in kf_u.split(X_dom):
@@ -334,7 +334,7 @@ if archivo is not None:
                 X_in = df_input[features].copy()
                 if transformar_log:
                     for c in features:
-                        if df_p[c].min() &gt;= 0 and abs(df_p[c].skew()) &gt; 1.0:
+                        if df_p[c].min() >= 0 and abs(df_p[c].skew()) > 1.0:
                             X_in[c] = np.log1p(X_in[c])
 
                 try:
@@ -396,7 +396,7 @@ if archivo is not None:
                     y_real_ugm = y_f[idx]
                     y_pred_ugm = y_pred[idx]
 
-                    if len(y_real_ugm) &gt; 1:
+                    if len(y_real_ugm) > 1:
                         r2_u = r2_score(y_real_ugm, y_pred_ugm)
                         mae_u = mean_absolute_error(y_real_ugm, y_pred_ugm)
                         rmse_u = np.sqrt(mean_squared_error(y_real_ugm, y_pred_ugm))
@@ -467,7 +467,7 @@ if archivo is not None:
                         for f in features:
                             f_min = float(df_p[f].min())
                             f_max = float(df_p[f].max())
-                            rango = f_max - f_min if (f_max - f_min) &gt; 0 else 1
+                            rango = f_max - f_min if (f_max - f_min) > 0 else 1
 
                             val_man_norm = ((inputs_sim[f] - f_min) / rango) * 100
                             val_opt_norm = ((mejor_cfg[f] - f_min) / rango) * 100
@@ -515,7 +515,7 @@ if archivo is not None:
                 df_audit['Error Absoluto'] = np.abs(df_audit['Rec. Real (%)'] - df_audit['Rec. Digital (%)'])
 
                 def evaluar_semaforo(e):
-                    return "🟢 Normal" if e &lt;= mae else ("🟡 Advertencia" if e &lt;= 2*mae else "🔴 Anomalía")
+                    return "🟢 Normal" if e <= mae else ("🟡 Advertencia" if e <= 2*mae else "🔴 Anomalía")
 
                 df_audit['Estado FDI'] = df_audit['Error Absoluto'].apply(evaluar_semaforo)
 

@@ -543,5 +543,3 @@ if archivo is not None:
 else:
     st.info("👈 Cargue el dataset histórico para iniciar el Digital Twin.")
 
-Gemini Notebook puede ofrecer respuestas incorrectas. Compruébalas.
-
